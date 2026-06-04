@@ -63,14 +63,13 @@ class Typealias extends BindingType {
     bool genFfiDartType = false,
     super.isInternal,
   })  : _ffiDartAliasName = genFfiDartType ? 'Dart$name' : null,
-        _dartAliasName =
-            (!genFfiDartType && type is! Typealias) ? 'Dart$name' : null,
+        _dartAliasName = (!genFfiDartType && type is! Typealias) ? 'Dart$name' : null,
         super(
           name: genFfiDartType ? 'Native$name' : name,
         );
 
   @override
-  String get wasmType { 
+  String get wasmType {
     return type.wasmType;
   }
 
@@ -109,8 +108,7 @@ class Typealias extends BindingType {
     if (_dartAliasName != null) {
       sb.write('typedef $_dartAliasName = ${type.getDartType(w)};\n');
     }
-    return BindingString(
-        type: BindingStringType.typeDef, string: sb.toString());
+    return BindingString(type: BindingStringType.typeDef, string: sb.toString());
   }
 
   @override
@@ -123,8 +121,7 @@ class Typealias extends BindingType {
   String getInteropDartType(Writer w) => name;
 
   @override
-  String getNativeType({String varName = ''}) =>
-      type.getNativeType(varName: varName);
+  String getNativeType({String varName = ''}) => type.getNativeType(varName: varName);
 
   @override
   String getWasmInteropType(Writer w) => type.getWasmInteropType(w);
@@ -159,4 +156,7 @@ class Typealias extends BindingType {
 
   @override
   int get sizeInBytes => typealiasType.sizeInBytes;
+
+  @override
+  int get alignmentInBytes => typealiasType.alignmentInBytes;
 }

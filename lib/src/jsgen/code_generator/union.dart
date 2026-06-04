@@ -38,12 +38,15 @@ class Union extends Compound {
     super.members,
     super.nativeType,
   }) : super(compoundType: CompoundType.union);
-  
+
   @override
   // TODO: implement llvmType
   String get llvmType => throw UnimplementedError();
-  
+
   @override
   // TODO: implement sizeInBytes
   int get sizeInBytes => throw UnimplementedError();
+
+  @override
+  int get alignmentInBytes => throw UnimplementedError();
 }

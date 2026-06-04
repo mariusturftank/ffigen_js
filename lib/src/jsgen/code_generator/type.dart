@@ -16,6 +16,10 @@ abstract class Type {
   String get llvmType;
   int get sizeInBytes;
 
+  /// The alignment requirement of this type in bytes (wasm32 ABI).
+  /// Defaults to sizeInBytes, which is correct for most primitive types.
+  int get alignmentInBytes => sizeInBytes;
+
   /// Get all dependencies of this type and save them in [dependencies].
   void addDependencies(Set<Binding> dependencies) {}
 
@@ -41,13 +45,11 @@ abstract class Type {
   String get wasmType => throw UnimplementedError();
 
   /// Returns the Dart type of the Type. This is only used for pointers.
-  String getWasmInteropType(Writer w) =>
-      throw UnsupportedError('No mapping for type: $this');
+  String getWasmInteropType(Writer w) => throw UnsupportedError('No mapping for type: $this');
 
   /// Returns the Dart type of the Type. This is the type that is passed from
   /// Dart to the interop code.
-  String getInteropDartType(Writer w) =>
-      throw UnsupportedError('No mapping for type: $this');
+  String getInteropDartType(Writer w) => throw UnsupportedError('No mapping for type: $this');
 
   /// Returns the user type of the Type. This is the type that is presented to
   /// users by the ffigened API to users. For C bindings this is always the same
@@ -101,12 +103,10 @@ abstract class BindingType extends Binding implements Type {
   bool get isIncompleteCompound => false;
 
   @override
-  String getWasmInteropType(Writer w) =>
-      throw UnsupportedError('No WASM type for $this');
+  String getWasmInteropType(Writer w) => throw UnsupportedError('No WASM type for $this');
 
   @override
-  String getInteropDartType(Writer w) =>
-      throw UnsupportedError('No mapping for type: $this');
+  String getInteropDartType(Writer w) => throw UnsupportedError('No mapping for type: $this');
 
   @override
   String getDartType(Writer w) => getInteropDartType(w);
@@ -133,4 +133,7 @@ class UnimplementedType extends Type {
 
   @override
   int get sizeInBytes => throw UnimplementedError(reason);
+
+  @override
+  int get alignmentInBytes => throw UnimplementedError(reason);
 }

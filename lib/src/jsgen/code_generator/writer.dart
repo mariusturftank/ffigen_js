@@ -209,6 +209,14 @@ import 'dart:js_interop_unsafe';
 import 'package:ffigen_js/ffigen_js.dart';
 export 'package:ffigen_js/ffigen_js.dart';
 
+/// Copies [length] bytes from [src] to [dst] using the WASM heap.
+void _copyBytes(int dst, int src, int length) {
+  final heapU8 = NativeLibrary.instance.HEAPU8.toDart;
+  final srcBytes = heapU8.buffer.asUint8List(src, length);
+  final dstBytes = heapU8.buffer.asUint8List(dst, length);
+  dstBytes.setAll(0, srcBytes);
+}
+
 extension type GeneratedBindings(NativeLibrary _) implements JSObject {
 
   static GeneratedBindings get instance => NativeLibrary.instance as GeneratedBindings;
@@ -309,8 +317,7 @@ extension type GeneratedBindings(NativeLibrary _) implements JSObject {
 
     // Remove internal bindings and macros.
     bindings.removeWhere((element) {
-      return element.isInternal ||
-          (element is Constant && element.usr!.contains('@macro@'));
+      return element.isInternal || (element is Constant && element.usr!.contains('@macro@'));
     });
 
     // Sort bindings alphabetically by USR.

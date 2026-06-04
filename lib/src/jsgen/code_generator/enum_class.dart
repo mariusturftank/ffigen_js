@@ -97,7 +97,7 @@ class EnumClass extends BindingType {
       buffer.write('\n');
     }
     if (asInt) {
-      buffer.write('${depth}static const $enumValueName = ${ec.value};');
+      buffer.write('${depth}static const int $enumValueName = ${ec.value};');
     } else {
       buffer.write('$depth$enumValueName(${ec.value})');
     }
@@ -190,8 +190,7 @@ class EnumClass extends BindingType {
       final duplicates = entry.value;
       if (duplicates.isEmpty) continue;
       final allDuplicates = [
-        for (final duplicate in [unique] + duplicates)
-          '$name.${enumNames[duplicate]!}',
+        for (final duplicate in [unique] + duplicates) '$name.${enumNames[duplicate]!}',
       ].join(', ');
       s.write(
         '$depth$depth'
@@ -232,7 +231,7 @@ class EnumClass extends BindingType {
   bool get _isBuiltIn => false;
 
   @override
-  BindingString toBindingString(Writer w, { bool writeModuleBinding = false}) {
+  BindingString toBindingString(Writer w, {bool writeModuleBinding = false}) {
     final s = StringBuffer();
     if (_isBuiltIn) {
       return const BindingString(type: BindingStringType.enum_, string: '');
@@ -243,7 +242,7 @@ class EnumClass extends BindingType {
     if (enumConstants.isEmpty) {
       writeEmptyEnum(s);
     } else if (generateAsInt) {
-      s.write('sealed class $name {\n');
+      s.write('abstract class $name {\n');
       writeIntegerConstants(s);
       s.write('}\n\n');
     } else {
@@ -291,14 +290,16 @@ class EnumClass extends BindingType {
 
   @override
   String getNativeType({String varName = ''}) => '$originalName $varName';
-  
+
   @override
   String get llvmType => "i32";
-  
+
   @override
   int get sizeInBytes => 4;
-}
 
+  @override
+  int get alignmentInBytes => 4;
+}
 
 /// Represents a single value in an enum.
 class EnumConstant {

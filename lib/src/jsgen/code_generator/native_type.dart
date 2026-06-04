@@ -26,21 +26,20 @@ enum SupportedNativeType {
 /// Represents a WASM type
 class NativeType extends Type {
   static const _primitives = <SupportedNativeType, NativeType>{
-    SupportedNativeType.voidType: NativeType._('void', 'void', 0, 'null', 'v'),
-    SupportedNativeType.char: NativeType._('int', 'char', 1, 'u8', 'i'),
-    SupportedNativeType.int8: NativeType._('int', 'int8_t', 1, 'i8', 'i'),
-    SupportedNativeType.int16: NativeType._('int', 'int16_t', 2, 'i16', 'i'),
-    SupportedNativeType.int32: NativeType._('int', 'int32_t', 4, 'i32', 'i'),
-    SupportedNativeType.int64: NativeType._('BigInt', 'int64_t', 8, 'i64', 'j'),
-    SupportedNativeType.uint8: NativeType._('int', 'uint8_t', 1, 'i8', 'i'),
-    SupportedNativeType.uint16: NativeType._('int', 'uint16_t', 2, 'i16', 'i'),
-    SupportedNativeType.uint32: NativeType._('int', 'uint32_t', 4, 'i32', 'i'),
-    SupportedNativeType.uint64: NativeType._('BigInt', 'uint64_t', 8, 'i64', 'j'),
-    SupportedNativeType.float: NativeType._('double', 'float', 4, 'float', 'f'),
-    SupportedNativeType.double:
-        NativeType._('double', 'double', 8, 'double', 'd'),
-    SupportedNativeType.intPtr: NativeType._('int', 'intptr_t', 8, '*', 'p'),
-    SupportedNativeType.uintPtr: NativeType._('int', 'uintptr_t', 8, '*', 'p'),
+    SupportedNativeType.voidType: NativeType._('void', 'void', 0, 0, 'null', 'v'),
+    SupportedNativeType.char: NativeType._('int', 'char', 1, 1, 'u8', 'i'),
+    SupportedNativeType.int8: NativeType._('int', 'int8_t', 1, 1, 'i8', 'i'),
+    SupportedNativeType.int16: NativeType._('int', 'int16_t', 2, 2, 'i16', 'i'),
+    SupportedNativeType.int32: NativeType._('int', 'int32_t', 4, 4, 'i32', 'i'),
+    SupportedNativeType.int64: NativeType._('BigInt', 'int64_t', 8, 8, 'i64', 'j'),
+    SupportedNativeType.uint8: NativeType._('int', 'uint8_t', 1, 1, 'i8', 'i'),
+    SupportedNativeType.uint16: NativeType._('int', 'uint16_t', 2, 2, 'i16', 'i'),
+    SupportedNativeType.uint32: NativeType._('int', 'uint32_t', 4, 4, 'i32', 'i'),
+    SupportedNativeType.uint64: NativeType._('BigInt', 'uint64_t', 8, 8, 'i64', 'j'),
+    SupportedNativeType.float: NativeType._('double', 'float', 4, 4, 'float', 'f'),
+    SupportedNativeType.double: NativeType._('double', 'double', 8, 8, 'double', 'd'),
+    SupportedNativeType.intPtr: NativeType._('int', 'intptr_t', 4, 4, '*', 'p'),
+    SupportedNativeType.uintPtr: NativeType._('int', 'uintptr_t', 4, 4, '*', 'p'),
   };
 
   final String _dartType;
@@ -50,11 +49,14 @@ class NativeType extends Type {
   final int sizeInBytes;
 
   @override
+  final int alignmentInBytes;
+
+  @override
   final String llvmType;
 
   final String wasmType;
 
-  const NativeType._(this._dartType, this._nativeType, this.sizeInBytes,
+  const NativeType._(this._dartType, this._nativeType, this.sizeInBytes, this.alignmentInBytes,
       this.llvmType, this.wasmType);
 
   factory NativeType(SupportedNativeType type) => _primitives[type]!;
@@ -63,7 +65,7 @@ class NativeType extends Type {
 
   @override
   String getInteropDartType(Writer w) {
-    if(llvmType == 'i64') {
+    if (llvmType == 'i64') {
       return "JSBigInt";
     }
     return _dartType;
@@ -71,44 +73,43 @@ class NativeType extends Type {
 
   @override
   String getWasmInteropType(Writer w) {
-
-    switch(_nativeType) {
-        case 'char':
-          return 'Char';
-        case 'BOOL':
-          return 'Bool';
-        case 'uint8_t':
-          return 'Uint8';
-        case 'int8_t':
-          return 'Int8';
-        case 'unsigned short':
-        case 'uint16_t':
-          return 'Uint16';
-        case 'uint32_t':
-          return 'Uint32';
-        case 'short':
-        case 'i16':
-        case 'int16_t':
-          return 'Int16';
-        case 'int':
-        case 'int32_t':
-        case 'long':
-          return 'Int32';
-        case 'int64_t':
-          return 'Int64';
-        case 'float':
-          return 'Float32';
-        case 'double':
-          return 'Float64';
-        case 'intptr_t':
-        case 'uintptr_t':
-          return 'Pointer';
-        case 'void':
-        case 'null':
-          return 'Void';
-        default:
-          throw UnimplementedError(_nativeType);
-      }
+    switch (_nativeType) {
+      case 'char':
+        return 'Char';
+      case 'BOOL':
+        return 'Bool';
+      case 'uint8_t':
+        return 'Uint8';
+      case 'int8_t':
+        return 'Int8';
+      case 'unsigned short':
+      case 'uint16_t':
+        return 'Uint16';
+      case 'uint32_t':
+        return 'Uint32';
+      case 'short':
+      case 'i16':
+      case 'int16_t':
+        return 'Int16';
+      case 'int':
+      case 'int32_t':
+      case 'long':
+        return 'Int32';
+      case 'int64_t':
+        return 'Int64';
+      case 'float':
+        return 'Float32';
+      case 'double':
+        return 'Float64';
+      case 'intptr_t':
+      case 'uintptr_t':
+        return 'Pointer';
+      case 'void':
+      case 'null':
+        return 'Void';
+      default:
+        throw UnimplementedError(_nativeType);
+    }
   }
 
   @override
@@ -119,7 +120,7 @@ class NativeType extends Type {
 }
 
 class BooleanType extends NativeType {
-  const BooleanType._() : super._('bool', 'BOOL', 1, 'i8', 'i');
+  const BooleanType._() : super._('bool', 'BOOL', 1, 1, 'i8', 'i');
   static const _boolean = BooleanType._();
   factory BooleanType() => _boolean;
 

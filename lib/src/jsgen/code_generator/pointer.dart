@@ -55,8 +55,7 @@ class PointerType extends Type {
   String getWasmInteropType(Writer w) => getInteropDartType(w);
 
   @override
-  String getNativeType({String varName = ''}) =>
-      '${child.getNativeType()}* $varName';
+  String getNativeType({String varName = ''}) => '${child.getNativeType()}* $varName';
 
   @override
   String toString() => '$child*';
@@ -70,8 +69,7 @@ class ConstantArray extends PointerType {
   final int length;
   final bool useArrayType;
 
-  ConstantArray(this.length, Type child, {required this.useArrayType})
-      : super._(child);
+  ConstantArray(this.length, Type child, {required this.useArrayType}) : super._(child);
 
   @override
   Type get baseArrayType => child.baseArrayType;
@@ -86,8 +84,7 @@ class ConstantArray extends PointerType {
   }
 
   @override
-  String getNativeType({String varName = ''}) =>
-      '${child.getNativeType()} $varName[$length]';
+  String getNativeType({String varName = ''}) => '${child.getNativeType()} $varName[$length]';
 
   @override
   String toString() => '$child[$length]';
@@ -102,6 +99,9 @@ class ConstantArray extends PointerType {
 
   @override
   int get sizeInBytes => length * baseArrayType.sizeInBytes;
+
+  @override
+  int get alignmentInBytes => baseArrayType.alignmentInBytes;
 }
 
 /// Represents an incomplete array, which has an unknown size.
@@ -112,8 +112,7 @@ class IncompleteArray extends PointerType {
   Type get baseArrayType => child.baseArrayType;
 
   @override
-  String getNativeType({String varName = ''}) =>
-      '${child.getNativeType()} $varName[]';
+  String getNativeType({String varName = ''}) => '${child.getNativeType()} $varName[]';
 
   @override
   String toString() => '$child[]';

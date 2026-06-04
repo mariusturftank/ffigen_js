@@ -7,6 +7,10 @@ import 'binding_string.dart';
 import 'utils.dart';
 import 'writer.dart';
 
+int _alignOffset(int offset, int alignment) {
+  return (offset + alignment - 1) & ~(alignment - 1);
+}
+
 enum CompoundType { struct, union }
 
 /// A binding for Compound type - Struct/Union.
@@ -103,8 +107,7 @@ abstract class Compound extends BindingType {
 
   @override
   BindingString toBindingString(Writer w, {bool writeModuleBinding = false}) {
-    final bindingType =
-        isStruct ? BindingStringType.struct : BindingStringType.union;
+    final bindingType = isStruct ? BindingStringType.struct : BindingStringType.union;
 
     final s = StringBuffer();
     final enclosingClassName = name;
@@ -144,6 +147,8 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
     const depth = '  ';
     int offset = 0;
     for (final m in members) {
+      // Align offset to this field's alignment requirement
+      offset = _alignOffset(offset, m.type.alignmentInBytes);
       m.name = localUniqueNamer.makeUnique(m.name);
       if (m.dartDoc != null) {
         s.write('$depth/// ');
@@ -152,9 +157,7 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
       }
       final memberName = m.name;
 
-      final dartType = m.type is PointerType
-          ? m.type.getDartType(w)
-          : m.type.getInteropDartType(w);
+      final dartType = m.type is PointerType ? m.type.getDartType(w) : m.type.getInteropDartType(w);
 
       final toDart = switch (m.type.getDartType(w)) {
         'double' => '.toDartDouble',
@@ -199,9 +202,7 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
       // For enum types, use 'AsInt' suffix so the enum getter can reference it.
       final isEnumClass = m.type is EnumClass;
       final generateAsInt = isEnumClass ? (m.type as EnumClass).generateAsInt : true;
-      final propertyName = (isEnumClass && !generateAsInt)
-          ? '${memberName}AsInt'
-          : memberName;
+      final propertyName = (isEnumClass && !generateAsInt) ? '${memberName}AsInt' : memberName;
 
       s.write('''
 $dartType get $propertyName {
@@ -209,10 +210,24 @@ $dartType get $propertyName {
   final value = NativeLibrary.instance.getValue(addr, '${m.type.llvmType}')$toDart;
   return ${box('value', 'addr')};
 }
+''');
+
+      // Inline struct fields use _copyBytes to copy the full struct value.
+      // Other types use setValue with the appropriate LLVM type.
+      final isInlineStruct = m.type is BindingType && m.type is! EnumClass;
+      if (isInlineStruct) {
+        s.write('''
+set $propertyName($dartType val) {
+  _copyBytes(this.address.addr + $offset, val.address.addr, ${m.type.sizeInBytes});
+}
+''');
+      } else {
+        s.write('''
 set $propertyName($dartType val) {
   NativeLibrary.instance.setValue(Pointer<$enclosingClassName>(this.address.addr + $offset), ${boxJS('val')}, '${m.type.llvmType}');
 }
 ''');
+      }
 
       if (isEnumClass && !generateAsInt) {
         final enumName = m.type.getDartType(w);
