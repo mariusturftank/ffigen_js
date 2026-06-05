@@ -168,7 +168,7 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
 
       final dartType = m.type is PointerType ? m.type.getDartType(w) : m.type.getInteropDartType(w);
 
-      final toDart = switch (m.type.getDartType(w)) {
+      final toDart = switch (m.type.typealiasType.getDartType(w)) {
         'double' => '.toDartDouble',
         'int' => '.toDartInt',
         _ => m.type is EnumClass ? '.toDartInt' : ''
@@ -186,7 +186,7 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
           return inner;
         } else if (m.type is BooleanType) {
           return '$inner.toDartInt == 1';
-        } else if (m.type is BindingType) {
+        } else if (m.type is Compound) {
           return '${m.type.getInteropDartType(w)}(Pointer<${m.type.getInteropDartType(w)}>(addr))';
         }
         return inner;
@@ -201,7 +201,7 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
           // EnumClass extends BindingType, so check it before BindingType.
           // For enum members, we just convert the int value to JS.
           return '$inner.toJS';
-        } else if (m.type is BindingType) {
+        } else if (m.type is Compound) {
           return '${inner}.address.toJS';
         }
         return '$inner.toJS';
@@ -223,7 +223,7 @@ $dartType get $propertyName {
 
       // Inline struct fields use _copyBytes to copy the full struct value.
       // Other types use setValue with the appropriate LLVM type.
-      final isInlineStruct = m.type is BindingType && m.type is! EnumClass;
+      final isInlineStruct = m.type is Compound;
       if (isInlineStruct) {
         s.write('''
 set $propertyName($dartType val) {
@@ -277,6 +277,11 @@ static Pointer<$name> stackAlloc() {
 
   @override
   bool get isIncompleteCompound => isIncomplete;
+
+  @override
+  String getWasmInteropType(Writer w) {
+    return name;
+  }
 
   @override
   String getInteropDartType(Writer w) {

@@ -338,8 +338,9 @@ void main() {
           contains("setValue(Pointer<PointDto>(this.address.addr + 0), val.toJS, 'double')"));
       expect(output,
           contains("setValue(Pointer<PointDto>(this.address.addr + 8), val.toJS, 'double')"));
-      // Should NOT use _copyBytes for primitives
-      expect(output, isNot(contains('_copyBytes')));
+      // Should NOT use _copyBytes for primitive field setters (but operator[]= in the extension may)
+      final classBody = output.substring(output.indexOf('final class PointDto'));
+      expect(classBody, isNot(contains('_copyBytes')));
     });
 
     test('setter for enum field uses setValue with i32', () {

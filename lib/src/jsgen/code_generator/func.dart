@@ -147,13 +147,13 @@ class Func extends Binding {
       // 2) populate the memory with the values from the Dart class
       // 3) adjust the interop argument to accept a pointer
 
-      if (paramType is Struct) {
+      if (paramType is Compound) {
         interopArgumentConstructors
             .add('final ${param.name}Ptr = ${param.name}.address;');
         interopArguments.add(
             Parameter(name: '${param.name}Ptr', type: PointerType(paramType)));
         userArguments.add(
-            Parameter(type: Struct(name: paramType.name), name: param.name));
+            Parameter(type: Compound.fromType(type: paramType.compoundType, name: paramType.name), name: param.name));
       } else if (paramType is PointerType) {
         final child = paramType.child;
 
@@ -174,7 +174,7 @@ class Func extends Binding {
           w.markNativeFunction(child.type);
         }
 
-        if (child is Struct) {
+        if (child is Compound) {
           interopArguments.add(Parameter(
               name: param.name,
               originalName: param.originalName,
@@ -195,13 +195,13 @@ class Func extends Binding {
     // 2) adjust the parameters for the interop function to accept a pointer to
     //    this struct as the first parameter
     // 3) adjust the return type for the interop function to return void
-    if (functionType.returnType is Struct) {
+    if (functionType.returnType is Compound) {
       final originalReturnType = functionType.returnType;
 
       interopReturnType =
           NativeType(SupportedNativeType.voidType).getDartType(w);
       userReturnType = originalReturnType.getInteropDartType(w);
-      final structType = functionType.returnType as Struct;
+      final structType = functionType.returnType as Compound;
       final structName = structType.name;
 
       final outParam = Parameter(

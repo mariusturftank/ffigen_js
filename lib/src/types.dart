@@ -516,6 +516,13 @@ abstract base class Struct extends NativeType {
   }
 }
 
+abstract base class Union extends NativeType {
+  final Pointer _address;
+  Pointer get address => _address;
+
+  Union(this._address);
+}
+
 final _heapAllocations = <Pointer>{};
 
 Pointer<T> _getPointer<T extends NativeType>(TypedData data, JSObject obj) {
