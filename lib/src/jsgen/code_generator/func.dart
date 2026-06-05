@@ -199,13 +199,19 @@ class Func extends Binding {
       userReturnType = originalReturnType.getInteropDartType(w);
       final structType = functionType.returnType as Compound;
       final structName = structType.name;
+      final sizeInBytes = structType.sizeInBytes;
 
       final outParam = Parameter(name: '${structName}_out', type: PointerType(originalReturnType));
       interopArgumentConstructors.add('final ${outParam.name} = ${structType.name}.stackAlloc();');
 
       interopArguments.insert(0, outParam);
 
-      interopReturnTypeConstructors.add('return ${outParam.name}.toDart();');
+      // Copy from stack to heap so the returned struct survives stack restore
+      interopReturnTypeConstructors.add(
+        'final heapPtr = malloc<$structName>($sizeInBytes);\n'
+        '_copyBytes(heapPtr.addr, ${outParam.name}.addr, $sizeInBytes);\n'
+        'return heapPtr.cast<$structName>().toDart();',
+      );
       // if the return type is a PointerPointer, we need to wrap inside a Pointer
     } else if (functionType.returnType is PointerType ||
         functionType.returnType.typealiasType is PointerType) {
