@@ -148,12 +148,11 @@ class Func extends Binding {
       // 3) adjust the interop argument to accept a pointer
 
       if (paramType is Compound) {
-        interopArgumentConstructors
-            .add('final ${param.name}Ptr = ${param.name}.address;');
-        interopArguments.add(
-            Parameter(name: '${param.name}Ptr', type: PointerType(paramType)));
-        userArguments.add(
-            Parameter(type: Compound.fromType(type: paramType.compoundType, name: paramType.name), name: param.name));
+        interopArgumentConstructors.add('final ${param.name}Ptr = ${param.name}.address;');
+        interopArguments.add(Parameter(name: '${param.name}Ptr', type: PointerType(paramType)));
+        userArguments.add(Parameter(
+            type: Compound.fromType(type: paramType.compoundType, name: paramType.name),
+            name: param.name));
       } else if (paramType is PointerType) {
         final child = paramType.child;
 
@@ -176,9 +175,7 @@ class Func extends Binding {
 
         if (child is Compound) {
           interopArguments.add(Parameter(
-              name: param.name,
-              originalName: param.originalName,
-              type: PointerType(child)));
+              name: param.name, originalName: param.originalName, type: PointerType(child)));
         } else {
           interopArguments.add(param);
         }
@@ -198,16 +195,13 @@ class Func extends Binding {
     if (functionType.returnType is Compound) {
       final originalReturnType = functionType.returnType;
 
-      interopReturnType =
-          NativeType(SupportedNativeType.voidType).getDartType(w);
+      interopReturnType = NativeType(SupportedNativeType.voidType).getDartType(w);
       userReturnType = originalReturnType.getInteropDartType(w);
       final structType = functionType.returnType as Compound;
       final structName = structType.name;
 
-      final outParam = Parameter(
-          name: '${structName}_out', type: PointerType(originalReturnType));
-      interopArgumentConstructors
-          .add('final ${outParam.name} = ${structType.name}.stackAlloc();');
+      final outParam = Parameter(name: '${structName}_out', type: PointerType(originalReturnType));
+      interopArgumentConstructors.add('final ${outParam.name} = ${structType.name}.stackAlloc();');
 
       interopArguments.insert(0, outParam);
 
@@ -237,13 +231,11 @@ class Func extends Binding {
           .add('return ${functionType.returnType.getDartType(w)}(result);');
     } else if (functionType.returnType is EnumClass &&
         !(functionType.returnType as EnumClass).generateAsInt) {
-      interopReturnTypeConstructors.add(
-          'return ${functionType.returnType.getDartType(w)}.fromValue(result);');
-    } else if (functionType.returnType is NativeType &&
-        functionType.returnType.llvmType == 'i64') {
+      interopReturnTypeConstructors
+          .add('return ${functionType.returnType.getDartType(w)}.fromValue(result);');
+    } else if (functionType.returnType is NativeType && functionType.returnType.llvmType == 'i64') {
       if (functionType.returnType.getNativeType() == "uint64_t") {
-        interopReturnTypeConstructors
-            .add('return bigIntasUintN(64,result).toDart;');
+        interopReturnTypeConstructors.add('return bigIntasUintN(64,result).toDart;');
       } else {
         interopReturnTypeConstructors.add('return result.toDart;');
       }
@@ -255,12 +247,10 @@ class Func extends Binding {
       interopReturnTypeConstructors.add('return result;');
     }
 
-    final userArgsString = userArguments
-        .map((p) => '${p.type.getDartType(w)} ${p.name},\n')
-        .join('');
-    final interopArgsString = interopArguments
-        .map((p) => '${p.type.getInteropDartType(w)} ${p.name},\n')
-        .join('');
+    final userArgsString =
+        userArguments.map((p) => '${p.type.getDartType(w)} ${p.name},\n').join('');
+    final interopArgsString =
+        interopArguments.map((p) => '${p.type.getInteropDartType(w)} ${p.name},\n').join('');
     final invokeInteropArgsString = interopArguments.map((p) {
       if (p.type.baseType is NativeFunc) {
         return '${p.name}.cast()';
@@ -295,8 +285,7 @@ class Func extends Binding {
     }).join(',');
 
     if (writeModuleBinding) {
-      s.write(
-          '''external $interopReturnType $interopFunctionName($interopArgsString);\n''');
+      s.write('''external $interopReturnType $interopFunctionName($interopArgsString);\n''');
     } else {
       s.write('''$userReturnType $userFunctionName($userArgsString) {
               ${interopArgumentConstructors.join("\n")}
@@ -335,6 +324,5 @@ class Parameter {
         // used in C for Pointer to function.
         type = type.typealiasType is NativeFunc ? PointerType(type) : type;
 
-  String getNativeType({String varName = ''}) =>
-      '${type.getNativeType(varName: varName)}';
+  String getNativeType({String varName = ''}) => '${type.getNativeType(varName: varName)}';
 }
