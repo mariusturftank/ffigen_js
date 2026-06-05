@@ -137,6 +137,12 @@ extension ${name}Ext on Pointer<$name> {
   $enclosingClassName toDart() {
     return $enclosingClassName(this);
   }
+  $enclosingClassName operator [](int i) {
+    return $enclosingClassName(Pointer<$enclosingClassName>(addr + i * $sizeInBytes));
+  }
+  void operator []=(int i, $enclosingClassName value) {
+    _copyBytes(addr + i * $sizeInBytes, value.address.addr, $sizeInBytes);
+  }
 }''');
 
     s.write('''
