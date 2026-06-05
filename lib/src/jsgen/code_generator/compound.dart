@@ -147,8 +147,11 @@ final class $enclosingClassName extends  ${isOpaque ? 'Struct' : dartClassName} 
     const depth = '  ';
     int offset = 0;
     for (final m in members) {
-      // Align offset to this field's alignment requirement
-      offset = _alignOffset(offset, m.type.alignmentInBytes);
+      // Align offset to this field's alignment requirement (structs only;
+      // union members all share offset 0).
+      if (isStruct) {
+        offset = _alignOffset(offset, m.type.alignmentInBytes);
+      }
       m.name = localUniqueNamer.makeUnique(m.name);
       if (m.dartDoc != null) {
         s.write('$depth/// ');
@@ -237,7 +240,9 @@ set $propertyName($dartType val) {
         );
       }
 
-      offset += m.type.sizeInBytes;
+      if (isStruct) {
+        offset += m.type.sizeInBytes;
+      }
     }
 
     // Add constructor with required named parameters

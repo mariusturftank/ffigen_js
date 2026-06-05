@@ -237,9 +237,41 @@ extension type GeneratedBindings(NativeLibrary _) implements JSObject {
       s.write('}\n\n');
     }
 
+    // Write the bindings class with all wrapper functions as instance methods.
+    s.write('''
+class $_className {
+  /// Initializes the WASM module and populates the struct size registry.
+  ///
+  /// [moduleName] must match the Emscripten EXPORT_NAME (e.g. 'app_trajectory_planner').
+  static Future<$_className> initBindings(String moduleName) async {
+    final factory = globalContext.getProperty(moduleName.toJS);
+    if (factory == null) {
+      throw StateError(
+        'JS factory "\$moduleName" not found. '
+        'Ensure the Emscripten .js file is loaded via a <script> tag.',
+      );
+    }
+    final modulePromise = (factory as JSFunction).callAsFunction() as JSPromise;
+    final module = await modulePromise.toDart;
+    NativeLibrary.instance = module as NativeLibrary;
+    _populateStructSizeRegistry();
+    return $_className();
+  }
+
+  static void _populateStructSizeRegistry() {
+    structSizeRegistry
+''');
+    for (final b in typeBindings) {
+      if (b is Compound) {
+        s.write('      ..[${b.name}] = ${b.sizeInBytes}\n');
+      }
+    }
+    s.write('    ;\n  }\n\n');
+
     for (final b in bindings) {
       s.write(b.toBindingString(this, writeModuleBinding: false).string);
     }
+    s.write('}\n\n');
 
     for (final b in typeBindings) {
       s.write(b.toBindingString(this, writeModuleBinding: false).string);

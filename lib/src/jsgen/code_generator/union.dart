@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:math' show max;
+
 import 'compound.dart';
 
 /// A binding for a C union -
@@ -40,13 +42,25 @@ class Union extends Compound {
   }) : super(compoundType: CompoundType.union);
 
   @override
-  // TODO: implement llvmType
-  String get llvmType => throw UnimplementedError();
+  String get llvmType => '*';
 
   @override
-  // TODO: implement sizeInBytes
-  int get sizeInBytes => throw UnimplementedError();
+  int get sizeInBytes {
+    int maxSize = 0;
+    int maxAlign = 1;
+    for (final member in members) {
+      maxSize = max(maxSize, member.type.sizeInBytes);
+      maxAlign = max(maxAlign, member.type.alignmentInBytes);
+    }
+    return (maxSize + maxAlign - 1) & ~(maxAlign - 1);
+  }
 
   @override
-  int get alignmentInBytes => throw UnimplementedError();
+  int get alignmentInBytes {
+    int maxAlign = 1;
+    for (final member in members) {
+      maxAlign = max(maxAlign, member.type.alignmentInBytes);
+    }
+    return maxAlign;
+  }
 }
