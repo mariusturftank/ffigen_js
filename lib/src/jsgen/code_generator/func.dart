@@ -287,11 +287,25 @@ class Func extends Binding {
     if (writeModuleBinding) {
       s.write('''external $interopReturnType $interopFunctionName($interopArgsString);\n''');
     } else {
-      s.write('''$userReturnType $userFunctionName($userArgsString) {
+      final needsStackFrame = functionType.returnType is Compound;
+      if (needsStackFrame) {
+        s.write('''$userReturnType $userFunctionName($userArgsString) {
+              final _sp = NativeLibrary.instance.stackSave();
+              try {
+              ${interopArgumentConstructors.join("\n")}
+              final result = GeneratedBindings.instance.$interopFunctionName($invokeInteropArgsString);
+              ${interopReturnTypeConstructors.join("\n")}
+              } finally {
+                NativeLibrary.instance.stackRestore(_sp);
+              }
+  }''');
+      } else {
+        s.write('''$userReturnType $userFunctionName($userArgsString) {
               ${interopArgumentConstructors.join("\n")}
               final result = GeneratedBindings.instance.$interopFunctionName($invokeInteropArgsString);
               ${interopReturnTypeConstructors.join("\n")}
   }''');
+      }
     }
 
     return BindingString(type: BindingStringType.func, string: s.toString());
